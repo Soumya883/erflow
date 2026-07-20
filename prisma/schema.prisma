@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  HR
+  EMPLOYEE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+model Employee {
+  id              String       @id @default(cuid())
+  employeeIdentifier String?      @unique // e.g. EMP-001
+  firstName       String
+  lastName        String
+  email           String       @unique
+  passwordHash    String       // Hashed password
+  
+  photoUrl        String?
+  address         String?      @db.Text
+  department      String?
+  designation     String?
+  phoneNumber     String?
+
+  role            Role         @default(EMPLOYEE)
+  
+  // Admin-controlled settings
+  joiningDate     DateTime?    @db.Date
+  shiftStartTime  String       @default("09:00") // e.g. HH:mm
+  shiftEndTime    String       @default("17:00") // e.g. HH:mm
+  
+  attendances     Attendance[]
+  tasks           Task[]       // 1-to-many relationship with Tasks (assigned tasks)
+  
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
+}
+
+model Attendance {
+  id            String           @id @default(cuid())
+  date          DateTime         @db.Date
+  
+  clockInTime   DateTime?        @db.Timestamptz(3)
+  clockOutTime  DateTime?        @db.Timestamptz(3)
+  
+  status        AttendanceStatus @default(PRESENT)
+  
+  // HR Problem Tracking Flags
+  needsHrReview Boolean          @default(false)
+  hrNotes       String?          @db.Text
+  
+  employeeId    String
+  employee      Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @db.Timestamptz(3)
+  
+  @@unique([employeeId, date])
+}
+
+model Task {
+  id              String     @id @default(uuid())
+  title           String
+  description     String?
+  status          TaskStatus @default(TODO)
+  priority        String     @default("MEDIUM") // LOW, MEDIUM, HIGH
+  dueDate         DateTime?
+  
+  assigneeId      String?
+  assignee        Employee?  @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}

@@ -17,7 +17,13 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TaskStatus } from "@prisma/client";
+// Removed @prisma/client import to prevent browser bundle failure
+enum TaskStatus {
+  TODO = "TODO",
+  IN_PROGRESS = "IN_PROGRESS",
+  REVIEW = "REVIEW",
+  DONE = "DONE"
+}
 import { getTasksAction, updateTaskStatusAction } from "@/app/actions/task";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";

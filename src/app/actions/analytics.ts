@@ -11,7 +11,7 @@ export const getAnalyticsDataAction = withAdminAction(async () => {
   const departmentCounts: Record<string, number> = {};
   let unassignedCount = 0;
 
-  profiles.forEach((profile) => {
+  profiles.forEach((profile: { department: string | null }) => {
     if (profile.department) {
       departmentCounts[profile.department] = (departmentCounts[profile.department] || 0) + 1;
     } else {
@@ -40,7 +40,7 @@ export const getAnalyticsDataAction = withAdminAction(async () => {
     DONE: 0,
   };
 
-  tasks.forEach((task) => {
+  tasks.forEach((task: { status: string }) => {
     if (statusCounts[task.status] !== undefined) {
       statusCounts[task.status]++;
     }

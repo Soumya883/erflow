@@ -31,6 +31,13 @@ enum EmployeeStatus {
   TERMINATED
 }
 
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
 model User {
   id              String           @id @default(cuid())
   name            String
@@ -61,6 +68,8 @@ model EmployeeProfile {
   tasks           Task[]
   leaveRequests   LeaveRequest[]
   attendanceLogs  AttendanceLog[]
+  documents       Document[]
+  announcements   Announcement[]   @relation("Author")
 
   createdAt       DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
@@ -76,13 +85,28 @@ model Department {
   updatedAt       DateTime          @updatedAt @db.Timestamptz(3)
 }
 
+model Project {
+  id              String          @id @default(cuid())
+  name            String
+  description     String?         @db.Text
+  status          ProjectStatus   @default(PLANNING)
+  
+  tasks           Task[]
+  
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+}
+
 model Task {
   id              String          @id @default(uuid())
   title           String
-  description     String?
+  description     String?         @db.Text
   status          TaskStatus      @default(TODO)
   priority        String          @default("MEDIUM") // LOW, MEDIUM, HIGH
   dueDate         DateTime?
+  
+  projectId       String?
+  project         Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   
   assigneeId      String?
   assignee        EmployeeProfile? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
@@ -119,4 +143,52 @@ model AttendanceLog {
   updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
   
   @@unique([employeeId, date])
+}
+
+model Announcement {
+  id              String          @id @default(cuid())
+  title           String
+  content         String          @db.Text
+  
+  authorId        String
+  author          EmployeeProfile @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+}
+
+model Document {
+  id              String          @id @default(cuid())
+  name            String
+  fileUrl         String
+  
+  employeeId      String
+  employee        EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  uploadedById    String
+  
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+}
+
+model AuditLog {
+  id              String          @id @default(cuid())
+  action          String          // e.g. CREATE, UPDATE, DELETE
+  entity          String          // e.g. USER, LEAVE_REQUEST
+  entityId        String
+  userId          String          // The user who performed the action
+  details         String?         @db.Text
+  
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+}
+
+model SystemSettings {
+  id              String          @id @default(cuid())
+  companyName     String          @default("OfficeFlow")
+  logoUrl         String?
+  primaryColor    String          @default("#4F46E5") // Indigo-600
+  workingHoursStart String        @default("09:00")
+  workingHoursEnd   String        @default("17:00")
+  
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
 }

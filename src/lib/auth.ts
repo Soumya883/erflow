@@ -3,6 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || "officeflow_fallback_secret_1234567890",
+  trustHost: true,
   providers: [
     Credentials({
       name: "Credentials",

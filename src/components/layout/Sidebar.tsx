@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -22,7 +23,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const navGroups = [
+type NavItem = { name: string; href: string; icon: any; roles?: string[] };
+type NavGroup = { label: string; items: NavItem[]; roles?: string[] };
+
+const navGroups: NavGroup[] = [
   {
     label: "Core",
     items: [
@@ -50,16 +54,19 @@ const navGroups = [
   },
   {
     label: "Admin",
+    roles: ["ADMIN", "MANAGER"],
     items: [
-      { name: "Analytics", href: "/analytics", icon: BarChart3 },
-      { name: "Audit Log", href: "/audit", icon: History },
-      { name: "Settings", href: "/settings", icon: Settings },
+      { name: "Analytics", href: "/analytics", icon: BarChart3, roles: ["ADMIN", "MANAGER"] },
+      { name: "Audit Log", href: "/audit", icon: History, roles: ["ADMIN"] },
+      { name: "Settings", href: "/settings", icon: Settings, roles: ["ADMIN"] },
     ]
   }
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || "EMPLOYEE";
 
   return (
     <aside className="hidden w-64 flex-col border-r border-border bg-sidebar px-4 py-6 sm:flex h-full overflow-y-auto">
@@ -73,13 +80,17 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-6">
-        {navGroups.map((group, groupIndex) => (
+        {navGroups
+          .filter(group => !group.roles || group.roles.includes(userRole))
+          .map((group, groupIndex) => (
           <div key={group.label}>
             <h4 className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {group.label}
             </h4>
             <div className="space-y-1">
-              {group.items.map((item, index) => {
+              {group.items
+                .filter(item => !item.roles || item.roles.includes(userRole))
+                .map((item, index) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
                 const Icon = item.icon;
                 
@@ -111,7 +122,11 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-8 border-t border-border pt-4">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-xl">
+        <Button 
+          variant="ghost" 
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-xl"
+        >
           <LogOut className="h-4 w-4 text-muted-foreground" />
           Log Out
         </Button>

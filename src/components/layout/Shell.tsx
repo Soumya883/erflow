@@ -8,6 +8,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const isLoginPage = pathname === "/login";
+
+  if (isLoginPage) {
+    return <div className="h-screen w-full bg-background">{children}</div>;
+  }
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden selection:bg-primary/20">

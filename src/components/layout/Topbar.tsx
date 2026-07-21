@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -71,7 +72,10 @@ export function Topbar() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive rounded-md cursor-pointer">
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive rounded-md cursor-pointer"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>

@@ -1,0 +1,100 @@
+import { requireAuth } from "@/lib/rbac";
+import { prisma } from "@/lib/prisma";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+export default async function DirectoryPage() {
+  await requireAuth();
+
+  const employees = await prisma.employeeProfile.findMany({
+    include: {
+      user: true,
+      department: true
+    },
+    orderBy: { user: { name: 'asc' } }
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Employee Directory</h1>
+          <p className="text-muted-foreground mt-1">
+            Browse and manage all team members.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead>Employee</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {employees.map((emp) => (
+              <TableRow key={emp.id} className="hover:bg-muted/50 cursor-pointer transition-colors">
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full border border-border bg-muted">
+                      {emp.avatarUrl ? (
+                        <img src={emp.avatarUrl} alt={emp.user.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center font-semibold text-muted-foreground">
+                          {emp.user.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-foreground">{emp.user.name}</div>
+                      <div className="text-xs text-muted-foreground">{emp.user.email}</div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {emp.department ? (
+                    <Badge variant="secondary" className="rounded-md font-normal">
+                      {emp.department.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {emp.jobTitle || emp.user.role}
+                </TableCell>
+                <TableCell>
+                  <Badge 
+                    variant={emp.status === "ACTIVE" ? "default" : "secondary"} 
+                    className={emp.status === "ACTIVE" ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-500/20" : ""}
+                  >
+                    {emp.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+            
+            {employees.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  No employees found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}

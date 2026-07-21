@@ -1,7 +1,7 @@
-import { PrismaClient, Role, TaskStatus, ProjectStatus } from '@prisma/client';
+import 'dotenv/config';
+import { Role, TaskStatus, ProjectStatus } from '@prisma/client';
 import { faker } from '@faker-js/faker';
-
-const prisma = new PrismaClient();
+import { prisma } from '../src/lib/prisma';
 
 async function main() {
   console.log('Start seeding...');

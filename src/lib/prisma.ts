@@ -1,9 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-// Revert to using the standard Prisma engine, which is much more stable on Vercel 
-// than using the pg adapter which can cause ETIMEDOUT socket hangs.
-// We use the pooler URL because Prisma requires connection pooling on Vercel.
+// The pooler URL is highly recommended for Vercel Serverless with Neon
 const connectionString = "postgresql://neondb_owner:npg_lPaRVs1kyTr6@ep-summer-pond-au60ur0i-pooler.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require";
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -11,12 +14,6 @@ const globalForPrisma = globalThis as unknown as {
 
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
-    datasources: {
-      db: {
-        url: connectionString,
-      },
-    },
-  });
+  new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

@@ -54,11 +54,9 @@ export function Topbar() {
           </Button>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 hover:bg-primary/20 transition-colors">
-                <User className="h-5 w-5 text-primary" />
-                <span className="sr-only">User Menu</span>
-              </Button>
+            <DropdownMenuTrigger className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+              <User className="h-5 w-5 text-primary" />
+              <span className="sr-only">User Menu</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>

@@ -29,7 +29,7 @@ export default function Error({
           <div className="text-sm text-muted-foreground text-left mt-4 space-y-2">
             <p><strong>Database Connection Issue Detected</strong></p>
             <p>This usually means your <code>DATABASE_URL</code> environment variable is missing or incorrect in Vercel.</p>
-            <p>Please check your Vercel Dashboard -> Settings -> Environment Variables.</p>
+            <p>Please check your Vercel Dashboard &gt; Settings &gt; Environment Variables.</p>
           </div>
         ) : null}
 

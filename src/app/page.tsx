@@ -6,22 +6,49 @@ import {
   CheckSquare, 
   Clock 
 } from "lucide-react";
+import { ClockInOutButton } from "@/components/dashboard/ClockInOutButton";
+import { RequestLeaveModal } from "@/components/dashboard/RequestLeaveModal";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  // Fetch some summary data for the dashboard
-  const [employeeCount, projectCount, taskCount, myPendingTasks] = await Promise.all([
+  const profile = await prisma.employeeProfile.findUnique({
+    where: { userId: user.id }
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Fetch summary data
+  const [employeeCount, projectCount, taskCount, myPendingTasks, todaysAttendance, myActiveTasks] = await Promise.all([
     prisma.employeeProfile.count(),
     prisma.project.count({ where: { status: "ACTIVE" } }),
     prisma.task.count({ where: { status: "TODO" } }),
-    prisma.task.count({ 
+    profile ? prisma.task.count({ 
       where: { 
-        assignee: { userId: user.id },
+        assigneeId: profile.id,
         status: { in: ["TODO", "IN_PROGRESS"] }
       } 
-    })
+    }) : 0,
+    profile ? prisma.attendanceLog.findFirst({
+      where: {
+        employeeId: profile.id,
+        date: {
+          gte: today,
+          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        }
+      }
+    }) : null,
+    profile ? prisma.task.findMany({
+      where: { assigneeId: profile.id, status: { not: "DONE" } },
+      take: 5,
+      orderBy: { dueDate: "asc" }
+    }) : []
   ]);
+
+  const hasClockedIn = !!todaysAttendance?.checkIn;
+  const hasClockedOut = !!todaysAttendance?.checkOut;
 
   return (
     <div className="space-y-8">
@@ -77,25 +104,44 @@ export default async function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Recent Announcements</h2>
-          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm">
-            <p>No new announcements today.</p>
-          </div>
+          <h2 className="text-lg font-semibold mb-4">My Assigned Tasks</h2>
+          {myActiveTasks.length > 0 ? (
+            <ul className="space-y-3">
+              {myActiveTasks.map(task => (
+                <li key={task.id} className="flex justify-between items-center p-3 border border-border rounded-lg bg-background">
+                  <div>
+                    <p className="font-medium text-sm">{task.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No Date"}
+                    </p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${task.status === "TODO" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                    {task.status.replace("_", " ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm">
+              <p>You have no pending tasks right now.</p>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 rounded-xl bg-secondary p-4 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors">
-              Request Leave
-            </button>
-            <button className="flex items-center justify-center gap-2 rounded-xl bg-secondary p-4 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors">
-              Clock In
-            </button>
-            {user.role === 'ADMIN' && (
-              <button className="flex items-center justify-center gap-2 rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary hover:bg-primary/20 transition-colors col-span-2">
-                Add New Employee
-              </button>
+            <RequestLeaveModal />
+            <ClockInOutButton hasClockedIn={hasClockedIn} hasClockedOut={hasClockedOut} />
+            {(user.role === 'ADMIN' || user.role === 'MANAGER') && (
+              <>
+                <Link href="/attendance" className="flex items-center justify-center gap-2 rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary hover:bg-primary/20 transition-colors">
+                  Manage Attendance
+                </Link>
+                <Link href="/leave" className="flex items-center justify-center gap-2 rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary hover:bg-primary/20 transition-colors">
+                  Review Leaves
+                </Link>
+              </>
             )}
           </div>
         </div>

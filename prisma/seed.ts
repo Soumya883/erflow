@@ -19,7 +19,8 @@ async function main() {
   await prisma.user.deleteMany({})
 
   console.log("Creating departments...")
-  const deptEngineering = await prisma.department.create({ data: { name: 'Engineering' } })
+  const deptEngineering = await prisma.department.create({ data: { name: 'Web Development' } })
+  const deptDataEntry = await prisma.department.create({ data: { name: 'Data Entry Operator' } })
   const deptHR = await prisma.department.create({ data: { name: 'Human Resources' } })
   const deptSales = await prisma.department.create({ data: { name: 'Sales' } })
   const deptDesign = await prisma.department.create({ data: { name: 'Design' } })
@@ -95,8 +96,8 @@ async function main() {
       role: 'EMPLOYEE',
       employeeProfile: {
         create: {
-          departmentId: deptDesign.id,
-          jobTitle: 'Product Designer',
+          departmentId: deptDataEntry.id,
+          jobTitle: 'Data Entry Operator',
           phone: '+91-9000000004',
           joinDate: new Date('2023-11-20'),
           avatarUrl: 'https://ui-avatars.com/api/?name=Emma+Designer&background=F59E0B&color=fff&size=256'

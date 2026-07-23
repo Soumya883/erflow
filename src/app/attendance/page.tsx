@@ -1,11 +1,39 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
+import { ExportAttendanceButton } from "@/components/attendance/ExportAttendanceButton";
+import { getDaysInMonth, endOfMonth, startOfMonth, isWeekend } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AttendanceMatrix } from "@/components/attendance/AttendanceMatrix";
+import { SyncToGoogleSheetsButton } from "@/components/attendance/SyncToGoogleSheetsButton";
 
-export default async function AttendancePage() {
+export const dynamic = "force-dynamic";
+
+export default async function AttendancePage({ searchParams }: { searchParams: Promise<{ month?: string, year?: string }> }) {
   await requireAuth(["MANAGER", "ADMIN"]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = toZonedTime(new Date(), 'Asia/Kolkata');
+  
+  const params = await searchParams;
+  let month = parseInt(params.month || "");
+  let year = parseInt(params.year || "");
+
+  if (isNaN(month) || isNaN(year)) {
+    month = now.getMonth();
+    year = now.getFullYear();
+  }
+
+  // Calculate local IST boundaries for the selected month
+  const monthStartLocal = new Date(year, month, 1, 0, 0, 0, 0);
+  const monthEndLocal = endOfMonth(monthStartLocal);
+  monthEndLocal.setHours(23, 59, 59, 999);
+
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const startUtc = new Date(monthStartLocal.getTime() - istOffset);
+  const endUtc = new Date(monthEndLocal.getTime() - istOffset);
+
+  const totalDays = getDaysInMonth(monthStartLocal);
 
   const employees = await prisma.employeeProfile.findMany({
     include: {
@@ -14,74 +42,140 @@ export default async function AttendancePage() {
       attendanceLogs: {
         where: {
           date: {
-            gte: today,
-            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+            gte: startUtc,
+            lte: endUtc
           }
         }
+      },
+      leaveRequests: {
+        where: {
+          status: "APPROVED",
+          startDate: { lte: endUtc },
+          endDate: { gte: startUtc }
+        }
       }
-    }
+    },
+    orderBy: { user: { name: "asc" } }
   });
 
+  // Pre-calculate Matrix Data
+  const matrixData = employees.map(emp => {
+    const days = [];
+    
+    for (let day = 1; day <= totalDays; day++) {
+      const currentDateLocal = new Date(year, month, day, 12, 0, 0);
+      // Only Sunday (0) is a holiday. Saturday (6) is a working day.
+      const isWknd = currentDateLocal.getDay() === 0;
+      
+      // Find log
+      // date in DB is UTC, but it represents the local day because of how we store it.
+      // Easiest way is to match by getDate() if we convert db date back to IST, but we can just use the bounds.
+      const dayStart = new Date(year, month, day, 0, 0, 0, 0);
+      const dayEnd = new Date(year, month, day, 23, 59, 59, 999);
+      const dStartUtc = new Date(dayStart.getTime() - istOffset);
+      const dEndUtc = new Date(dayEnd.getTime() - istOffset);
+
+      const log = emp.attendanceLogs.find(l => {
+        const t = l.date.getTime();
+        return t >= dStartUtc.getTime() && t <= dEndUtc.getTime();
+      });
+
+      // Find Leave
+      const isOnLeave = emp.leaveRequests.some(l => {
+        return dStartUtc <= l.endDate && dEndUtc >= l.startDate;
+      });
+
+      let status = "ABSENT";
+      if (log?.checkIn) status = "PRESENT";
+      else if (isOnLeave) status = "LEAVE";
+      else if (isWknd) status = "WEEKEND";
+      
+      // Future days shouldn't be marked as Absent yet
+      if (!log?.checkIn && !isOnLeave && !isWknd && currentDateLocal.getTime() > now.getTime()) {
+        status = "PENDING";
+      }
+
+      days.push({
+        day,
+        status,
+        checkIn: log?.checkIn ? log.checkIn.toISOString() : null,
+        checkOut: log?.checkOut ? log.checkOut.toISOString() : null,
+        logId: log?.id || null,
+        employeeId: emp.id
+      });
+    }
+
+    // Calculate summary for salary
+    const presentDays = days.filter(d => d.status === "PRESENT").length;
+    const leaveDays = days.filter(d => d.status === "LEAVE").length;
+    
+    // Formula used in CSV: Total Days - Absences (where absence is not present and not leave)
+    const daysAbsent = totalDays - presentDays - leaveDays;
+    const payableDays = Math.max(0, totalDays - Math.max(0, daysAbsent));
+    const baseSalary = emp.salary || 0;
+    const calculatedSalary = (baseSalary / totalDays) * payableDays;
+
+    return {
+      id: emp.id,
+      name: emp.user.name,
+      department: emp.department?.name || "N/A",
+      baseSalary,
+      payableDays,
+      calculatedSalary,
+      days
+    };
+  });
+
+  // Navigation Links
+  const prevMonth = month === 0 ? 11 : month - 1;
+  const prevYear = month === 0 ? year - 1 : year;
+  const nextMonth = month === 11 ? 0 : month + 1;
+  const nextYear = month === 11 ? year + 1 : year;
+
+  const monthName = monthStartLocal.toLocaleString('default', { month: 'long' });
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Attendance Management</h1>
-        <p className="text-muted-foreground mt-1">
-          Monitor and manage employee attendance for today.
-        </p>
+    <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Attendance Matrix</h1>
+          <p className="text-muted-foreground mt-1">
+            Monthly spreadsheet view of all employee attendance.
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-xl p-1">
+            <Link 
+              href={`/attendance?month=${prevMonth}&year=${prevYear}`}
+              className="p-1.5 hover:bg-muted rounded-lg transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+            <span className="min-w-[120px] text-center text-sm font-semibold">
+              {monthName} {year}
+            </span>
+            <Link 
+              href={`/attendance?month=${nextMonth}&year=${nextYear}`}
+              className="p-1.5 hover:bg-muted rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <SyncToGoogleSheetsButton matrixData={matrixData} totalDays={totalDays} month={month} year={year} />
+            <ExportAttendanceButton matrixData={matrixData} totalDays={totalDays} month={month} year={year} />
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-muted-foreground bg-secondary/50 uppercase border-b border-border">
-              <tr>
-                <th className="px-6 py-4 font-medium">Employee</th>
-                <th className="px-6 py-4 font-medium">Department</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Clock In</th>
-                <th className="px-6 py-4 font-medium">Clock Out</th>
-                <th className="px-6 py-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {employees.map(emp => {
-                const log = emp.attendanceLogs[0];
-                const isPresent = !!log?.checkIn;
-                return (
-                  <tr key={emp.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4 font-medium">{emp.user.name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{emp.department?.name || "N/A"}</td>
-                    <td className="px-6 py-4">
-                      {isPresent ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                          Present
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                          Absent
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {log?.checkIn ? new Date(log.checkIn).toLocaleTimeString() : "-"}
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {log?.checkOut ? new Date(log.checkOut).toLocaleTimeString() : "-"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="text-sm font-medium text-primary hover:underline">
-                        Edit Record
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <AttendanceMatrix 
+          matrixData={matrixData} 
+          totalDays={totalDays}
+          month={month}
+          year={year}
+        />
       </div>
     </div>
   );

@@ -39,156 +39,218 @@ enum ProjectStatus {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  passwordHash    String
-  role            Role             @default(EMPLOYEE)
-  
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  passwordHash String
+  role         Role   @default(EMPLOYEE)
+
   employeeProfile EmployeeProfile?
-  
-  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model EmployeeProfile {
-  id              String           @id @default(cuid())
-  userId          String           @unique
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  departmentId    String?
-  department      Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  
-  jobTitle        String?
-  phone           String?
-  joinDate        DateTime?        @db.Date
-  avatarUrl       String?
-  status          EmployeeStatus   @default(ACTIVE)
-  
-  tasks           Task[]
-  leaveRequests   LeaveRequest[]
-  attendanceLogs  AttendanceLog[]
-  documents       Document[]
-  announcements   Announcement[]   @relation("Author")
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  jobTitle  String?
+  salary    Float?         @default(0)
+  phone     String?
+  joinDate  DateTime?      @db.Date
+  avatarUrl String?
+  status    EmployeeStatus @default(ACTIVE)
+
+  // Bank Details
+  bankName          String?
+  bankBranch        String?
+  bankAccountNumber String?
+  bankIfscCode      String?
+
+  tasks          Task[]
+  leaveRequests  LeaveRequest[]
+  attendanceLogs AttendanceLog[]
+  documents      Document[]
+  announcements  Announcement[]    @relation("Author")
+  spreadsheets   Spreadsheet[]
+  chatRooms      ChatParticipant[]
+  chatMessages   ChatMessage[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model Department {
-  id              String            @id @default(cuid())
-  name            String            @unique
-  
-  employees       EmployeeProfile[]
-  
-  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime          @updatedAt @db.Timestamptz(3)
+  id   String @id @default(cuid())
+  name String @unique
+
+  employees EmployeeProfile[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model Project {
-  id              String          @id @default(cuid())
-  name            String
-  description     String?         @db.Text
-  status          ProjectStatus   @default(PLANNING)
-  
-  tasks           Task[]
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  status      ProjectStatus @default(PLANNING)
+
+  tasks Task[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model Task {
-  id              String          @id @default(uuid())
-  title           String
-  description     String?         @db.Text
-  status          TaskStatus      @default(TODO)
-  priority        String          @default("MEDIUM") // LOW, MEDIUM, HIGH
-  dueDate         DateTime?
-  
-  projectId       String?
-  project         Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  
-  assigneeId      String?
-  assignee        EmployeeProfile? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id          String     @id @default(uuid())
+  title       String
+  description String?    @db.Text
+  status      TaskStatus @default(TODO)
+  priority    String     @default("MEDIUM") // LOW, MEDIUM, HIGH
+  dueDate     DateTime?
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  assigneeId String?
+  assignee   EmployeeProfile? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model LeaveRequest {
-  id              String          @id @default(cuid())
-  employeeId      String
-  employee        EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  type            String          // e.g. SICK, VACATION, PERSONAL
-  startDate       DateTime        @db.Date
-  endDate         DateTime        @db.Date
-  status          LeaveStatus     @default(PENDING)
-  reason          String?         @db.Text
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id         String          @id @default(cuid())
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  type      String // e.g. SICK, VACATION, PERSONAL
+  startDate DateTime    @db.Date
+  endDate   DateTime    @db.Date
+  status    LeaveStatus @default(PENDING)
+  reason    String?     @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model AttendanceLog {
-  id              String          @id @default(cuid())
-  employeeId      String
-  employee        EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  date            DateTime        @db.Date
-  checkIn         DateTime?       @db.Timestamptz(3)
-  checkOut        DateTime?       @db.Timestamptz(3)
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
-  
+  id         String          @id @default(cuid())
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  date     DateTime  @db.Date
+  checkIn  DateTime? @db.Timestamptz(3)
+  checkOut DateTime? @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   @@unique([employeeId, date])
 }
 
 model Announcement {
-  id              String          @id @default(cuid())
-  title           String
-  content         String          @db.Text
-  
-  authorId        String
-  author          EmployeeProfile @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id      String @id @default(cuid())
+  title   String
+  content String @db.Text
+
+  authorId String
+  author   EmployeeProfile @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model Document {
-  id              String          @id @default(cuid())
-  name            String
-  fileUrl         String
-  
-  employeeId      String
-  employee        EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  uploadedById    String
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id      String @id @default(cuid())
+  name    String
+  fileUrl String
+
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model AuditLog {
-  id              String          @id @default(cuid())
-  action          String          // e.g. CREATE, UPDATE, DELETE
-  entity          String          // e.g. USER, LEAVE_REQUEST
-  entityId        String
-  userId          String          // The user who performed the action
-  details         String?         @db.Text
-  
-  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  id       String  @id @default(cuid())
+  action   String // e.g. CREATE, UPDATE, DELETE
+  entity   String // e.g. USER, LEAVE_REQUEST
+  entityId String
+  userId   String // The user who performed the action
+  details  String? @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 }
 
 model SystemSettings {
-  id              String          @id @default(cuid())
-  companyName     String          @default("OfficeFlow")
-  logoUrl         String?
-  primaryColor    String          @default("#4F46E5") // Indigo-600
-  workingHoursStart String        @default("09:00")
-  workingHoursEnd   String        @default("17:00")
-  
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  id                String  @id @default(cuid())
+  companyName       String  @default("OfficeFlow")
+  logoUrl           String?
+  primaryColor      String  @default("#4F46E5") // Indigo-600
+  workingHoursStart String  @default("09:00")
+  workingHoursEnd   String  @default("17:00")
+
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model Spreadsheet {
+  id    String @id @default(cuid())
+  title String
+  data  Json // Stores the fortune-sheet JSON data
+
+  authorId String
+  author   EmployeeProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model ChatRoom {
+  id      String  @id @default(cuid())
+  isGroup Boolean @default(false)
+  name    String? // Null for 1-on-1 chats
+
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model ChatParticipant {
+  id String @id @default(cuid())
+
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([roomId, employeeId])
+}
+
+model ChatMessage {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   EmployeeProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }

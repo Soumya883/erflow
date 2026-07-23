@@ -20,6 +20,7 @@ import {
   History,
   Settings,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -44,12 +45,19 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    label: "HR & People",
+    label: "Company",
     items: [
-      { name: "Attendance", href: "/attendance", icon: Clock },
-      { name: "Leave", href: "/leave", icon: CalendarDays },
+      { name: "Messages", href: "/messages", icon: MessageSquare },
       { name: "Announcements", href: "/announcements", icon: Megaphone },
       { name: "Documents", href: "/documents", icon: Files },
+    ]
+  },
+  {
+    label: "HR Management",
+    roles: ["ADMIN", "MANAGER"],
+    items: [
+      { name: "Attendance Admin", href: "/attendance", icon: Clock, roles: ["ADMIN", "MANAGER"] },
+      { name: "Leave Admin", href: "/leave", icon: CalendarDays, roles: ["ADMIN", "MANAGER"] },
     ]
   },
   {

@@ -9,11 +9,15 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EditEmployeeModal } from "@/components/edit-employee-modal";
 
-export default async function DirectoryPage() {
-  await requireAuth();
+export default async function DirectoryPage(props: { searchParams: Promise<{ departmentId?: string }> }) {
+  const currentUser = await requireAuth();
+  const searchParams = await props.searchParams;
+  const departmentId = searchParams?.departmentId;
 
   const employees = await prisma.employeeProfile.findMany({
+    where: departmentId ? { departmentId } : {},
     include: {
       user: true,
       department: true
@@ -21,13 +25,23 @@ export default async function DirectoryPage() {
     orderBy: { user: { name: 'asc' } }
   });
 
+  const departments = await prisma.department.findMany({
+    orderBy: { name: 'asc' }
+  });
+
+  let departmentName = "";
+  if (departmentId) {
+    const dept = departments.find(d => d.id === departmentId);
+    if (dept) departmentName = ` - ${dept.name} Team`;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Employee Directory</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Employee Directory{departmentName}</h1>
           <p className="text-muted-foreground mt-1">
-            Browse and manage all team members.
+            Browse and manage {departmentId ? "department" : "all"} team members.
           </p>
         </div>
       </div>
@@ -40,6 +54,9 @@ export default async function DirectoryPage() {
               <TableHead>Department</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
+              {currentUser.role === 'ADMIN' && (
+                <TableHead className="text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -47,12 +64,12 @@ export default async function DirectoryPage() {
               <TableRow key={emp.id} className="hover:bg-muted/50 cursor-pointer transition-colors">
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 overflow-hidden rounded-full border border-border bg-muted">
+                    <div className="h-10 w-10 overflow-hidden rounded-full border border-border bg-muted shrink-0">
                       {emp.avatarUrl ? (
                         <img src={emp.avatarUrl} alt={emp.user.name} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center font-semibold text-muted-foreground">
-                          {emp.user.name.charAt(0)}
+                        <div className="flex h-full w-full items-center justify-center font-semibold text-muted-foreground bg-primary/5">
+                          {emp.user.name.charAt(0).toUpperCase()}
                         </div>
                       )}
                     </div>
@@ -82,12 +99,19 @@ export default async function DirectoryPage() {
                     {emp.status}
                   </Badge>
                 </TableCell>
+                {currentUser.role === 'ADMIN' && (
+                  <TableCell className="text-right">
+                    <div>
+                      <EditEmployeeModal employee={emp} departments={departments} />
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
             
             {employees.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={currentUser.role === 'ADMIN' ? 5 : 4} className="h-24 text-center text-muted-foreground">
                   No employees found.
                 </TableCell>
               </TableRow>

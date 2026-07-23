@@ -1,11 +1,44 @@
 import { requireAuth } from "@/lib/rbac";
+import { prisma } from "@/lib/prisma";
+import { AnalyticsCharts } from "@/components/analytics/AnalyticsCharts";
+import { Users, FolderKanban, CheckSquare, Clock } from "lucide-react";
 
 export default async function AnalyticsPage() {
-  // Only ADMIN and MANAGER can access Analytics
   await requireAuth(["ADMIN", "MANAGER"]);
 
+  // 1. Key Metrics
+  const totalEmployees = await prisma.employeeProfile.count({ where: { status: "ACTIVE" } });
+  
+  const totalProjects = await prisma.project.count({ where: { status: "ACTIVE" } });
+  
+  const totalTasks = await prisma.task.count();
+  const completedTasks = await prisma.task.count({ where: { status: "DONE" } });
+
+  // 2. Task Completion by Project Data
+  const projects = await prisma.project.findMany({
+    include: { tasks: true }
+  });
+
+  const taskData = projects.map(p => ({
+    name: p.name,
+    completed: p.tasks.filter(t => t.status === "DONE").length,
+    pending: p.tasks.filter(t => t.status !== "DONE").length,
+  }));
+
+  // 3. Employee Distribution by Department
+  const departments = await prisma.department.findMany({
+    include: { employees: true }
+  });
+
+  const deptData = departments
+    .map(d => ({
+      name: d.name,
+      value: d.employees.length
+    }))
+    .filter(d => d.value > 0);
+
   return (
-    <div className="space-y-6 flex flex-col h-[80vh]">
+    <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Analytics</h1>
         <p className="text-muted-foreground mt-1">
@@ -13,28 +46,57 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
-      <div className="flex-1 rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center text-center shadow-sm">
-        <div className="rounded-full bg-primary/10 p-4 mb-4">
-          <svg
-            className=" h-8 w-8 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+              <Users className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
+              <h3 className="text-2xl font-bold">{totalEmployees}</h3>
+            </div>
+          </div>
         </div>
-        <h2 className="text-xl font-semibold mb-2 text-foreground">Analytics Dashboard Coming Soon</h2>
-        <p className="text-muted-foreground max-w-md">
-          We are currently connecting the Recharts engine to the new database models.
-          Soon, you'll see beautiful visualizations of company growth, task completion rates, and attendance trends here.
-        </p>
+
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl">
+              <FolderKanban className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+              <h3 className="text-2xl font-bold">{totalProjects}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-500/10 text-green-600 rounded-xl">
+              <CheckSquare className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Completed Tasks</p>
+              <h3 className="text-2xl font-bold">{completedTasks}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-500/10 text-orange-500 rounded-xl">
+              <Clock className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Pending Tasks</p>
+              <h3 className="text-2xl font-bold">{totalTasks - completedTasks}</h3>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <AnalyticsCharts taskData={taskData} deptData={deptData} />
     </div>
   );
 }

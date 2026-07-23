@@ -1,18 +1,19 @@
 import { z } from "zod";
 
 export const EmployeeSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters long" }),
   email: z.string().email({ message: "Invalid email address" }),
-  firstName: z.string().min(2, { message: "First name must be at least 2 characters long" }),
-  lastName: z.string().min(2, { message: "Last name must be at least 2 characters long" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
-  role: z.enum(["ADMIN", "HR", "EMPLOYEE"]).default("EMPLOYEE"),
-  department: z.string().optional(),
-  designation: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-  joiningDate: z.coerce.date().optional(),
-  shiftStartTime: z.string().default("09:00"),
-  shiftEndTime: z.string().default("17:00"),
+  role: z.enum(["ADMIN", "MANAGER", "EMPLOYEE"]).default("EMPLOYEE"),
+  departmentId: z.string().optional().or(z.literal("")),
+  jobTitle: z.string().optional(),
+  salary: z.coerce.number().optional(),
+  phone: z.string().optional(),
+  joinDate: z.string().optional(),
+  status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]).default("ACTIVE"),
+  bankName: z.string().optional(),
+  bankBranch: z.string().optional(),
+  bankAccountNumber: z.string().optional(),
+  bankIfscCode: z.string().optional(),
 });
 
 export type EmployeeInput = z.infer<typeof EmployeeSchema>;

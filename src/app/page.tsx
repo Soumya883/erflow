@@ -9,6 +9,7 @@ import {
 import { ClockInOutButton } from "@/components/dashboard/ClockInOutButton";
 import { RequestLeaveModal } from "@/components/dashboard/RequestLeaveModal";
 import Link from "next/link";
+import { getIstTodayBounds } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
@@ -17,8 +18,7 @@ export default async function DashboardPage() {
     where: { userId: user.id }
   });
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { startOfToday, endOfToday } = getIstTodayBounds();
 
   // Fetch summary data
   const [employeeCount, projectCount, taskCount, myPendingTasks, todaysAttendance, myActiveTasks] = await Promise.all([
@@ -35,8 +35,8 @@ export default async function DashboardPage() {
       where: {
         employeeId: profile.id,
         date: {
-          gte: today,
-          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          gte: startOfToday,
+          lt: endOfToday
         }
       }
     }) : null,

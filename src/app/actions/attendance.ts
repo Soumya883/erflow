@@ -6,87 +6,99 @@ import { revalidatePath } from "next/cache";
 import { getIstTodayBounds } from "@/lib/utils";
 
 export async function clockIn() {
-  const user = await requireAuth();
+  try {
+    const user = await requireAuth();
 
-  // Find the employee profile
-  const profile = await prisma.employeeProfile.findUnique({
-    where: { userId: user.id }
-  });
+    // Find the employee profile
+    const profile = await prisma.employeeProfile.findUnique({
+      where: { userId: user.id }
+    });
 
-  if (!profile) {
-    throw new Error("Employee profile not found");
-  }
+    if (!profile) {
+      return { error: "Employee profile not found. Please contact HR to set up your profile." };
+    }
 
-  // Get today's bounds in IST
-  const { startOfToday, endOfToday } = getIstTodayBounds();
+    // Get today's bounds in IST
+    const { startOfToday, endOfToday } = getIstTodayBounds();
 
-  // Check if they already clocked in today
-  const existingLog = await prisma.attendanceLog.findFirst({
-    where: {
-      employeeId: profile.id,
-      date: {
-        gte: startOfToday,
-        lt: endOfToday
+    // Check if they already clocked in today
+    const existingLog = await prisma.attendanceLog.findFirst({
+      where: {
+        employeeId: profile.id,
+        date: {
+          gte: startOfToday,
+          lt: endOfToday
+        }
       }
-    }
-  });
+    });
 
-  if (existingLog) {
-    throw new Error("Already clocked in today");
+    if (existingLog) {
+      return { error: "You have already clocked in today." };
+    }
+
+    await prisma.attendanceLog.create({
+      data: {
+        employeeId: profile.id,
+        date: new Date(),
+        checkIn: new Date(),
+      }
+    });
+
+    revalidatePath("/");
+    revalidatePath("/attendance");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Clock in error:", error);
+    return { error: "An unexpected error occurred while clocking in. " + (error.message || "") };
   }
-
-  await prisma.attendanceLog.create({
-    data: {
-      employeeId: profile.id,
-      date: new Date(),
-      checkIn: new Date(),
-    }
-  });
-
-  revalidatePath("/");
-  revalidatePath("/attendance");
 }
 
 export async function clockOut() {
-  const user = await requireAuth();
+  try {
+    const user = await requireAuth();
 
-  const profile = await prisma.employeeProfile.findUnique({
-    where: { userId: user.id }
-  });
+    const profile = await prisma.employeeProfile.findUnique({
+      where: { userId: user.id }
+    });
 
-  if (!profile) {
-    throw new Error("Employee profile not found");
-  }
+    if (!profile) {
+      return { error: "Employee profile not found. Please contact HR to set up your profile." };
+    }
 
-  const { startOfToday, endOfToday } = getIstTodayBounds();
+    const { startOfToday, endOfToday } = getIstTodayBounds();
 
-  const existingLog = await prisma.attendanceLog.findFirst({
-    where: {
-      employeeId: profile.id,
-      date: {
-        gte: startOfToday,
-        lt: endOfToday
+    const existingLog = await prisma.attendanceLog.findFirst({
+      where: {
+        employeeId: profile.id,
+        date: {
+          gte: startOfToday,
+          lt: endOfToday
+        }
       }
+    });
+
+    if (!existingLog) {
+      return { error: "You have not clocked in today." };
     }
-  });
 
-  if (!existingLog) {
-    throw new Error("You have not clocked in today");
-  }
-
-  if (existingLog.checkOut) {
-    throw new Error("Already clocked out today");
-  }
-
-  await prisma.attendanceLog.update({
-    where: { id: existingLog.id },
-    data: {
-      checkOut: new Date()
+    if (existingLog.checkOut) {
+      return { error: "You have already clocked out today." };
     }
-  });
 
-  revalidatePath("/");
-  revalidatePath("/attendance");
+    await prisma.attendanceLog.update({
+      where: { id: existingLog.id },
+      data: {
+        checkOut: new Date()
+      }
+    });
+
+    revalidatePath("/");
+    revalidatePath("/attendance");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Clock out error:", error);
+    return { error: "An unexpected error occurred while clocking out. " + (error.message || "") };
+  }
 }
 
 export async function updateAttendanceRecord(

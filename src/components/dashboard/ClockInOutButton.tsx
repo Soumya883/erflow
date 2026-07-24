@@ -12,11 +12,19 @@ export function ClockInOutButton({ hasClockedIn, hasClockedOut }: { hasClockedIn
     setIsLoading(true);
     try {
       if (!hasClockedIn) {
-        await clockIn();
-        toast.success("Successfully clocked in for today!");
+        const result = await clockIn();
+        if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Successfully clocked in for today!");
+        }
       } else if (!hasClockedOut) {
-        await clockOut();
-        toast.success("Successfully clocked out for today!");
+        const result = await clockOut();
+        if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Successfully clocked out for today!");
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "An error occurred");

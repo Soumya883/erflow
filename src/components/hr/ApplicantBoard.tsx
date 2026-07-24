@@ -73,7 +73,7 @@ export function ApplicantBoard({ job }: { job: Job }) {
                     <div className="flex justify-between items-start mb-2">
                       <div className="font-medium text-foreground">{applicant.name}</div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <UpdateApplicantModal applicant={applicant} jobs={[]} />
+                        <UpdateApplicantModal applicant={JSON.parse(JSON.stringify(applicant))} jobs={[]} />
                         <select 
                           className="text-xs bg-muted border-none rounded p-1 cursor-pointer"
                           value={applicant.status}

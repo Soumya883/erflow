@@ -89,7 +89,7 @@ export default async function CalendarPage() {
       </div>
 
       <div className="flex-1 bg-card rounded-2xl border border-border p-6 shadow-sm overflow-auto">
-        <CalendarClient events={events} isAdmin={isAdmin} employees={employees.map(e => ({ id: e.id, name: e.user.name }))} />
+        <CalendarClient events={JSON.parse(JSON.stringify(events))} isAdmin={isAdmin} employees={employees.map(e => ({ id: e.id, name: e.user.name }))} />
       </div>
     </div>
   );

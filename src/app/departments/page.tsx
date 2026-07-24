@@ -45,7 +45,7 @@ export default async function DepartmentsPage() {
                 </div>
                 {user.role === "ADMIN" && (
                   <div className="flex items-center gap-2">
-                    <UpdateDepartmentModal department={dept} />
+                    <UpdateDepartmentModal department={JSON.parse(JSON.stringify(dept))} />
                     <DeleteDepartmentButton id={dept.id} name={dept.name} disabled={empCount > 0} />
                   </div>
                 )}

@@ -76,8 +76,8 @@ function SortableTask({
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={e => e.stopPropagation()}>
         {isManager && (
           <UpdateTaskModal 
-            task={task} 
-            projects={projects} 
+            task={JSON.parse(JSON.stringify(task))} 
+            projects={JSON.parse(JSON.stringify(projects))} 
             users={employees} 
             isManager={isManager} 
           />
@@ -264,9 +264,9 @@ export function KanbanBoard({
             {tasksInColumn.map((task: any) => (
               <SortableTask 
                 key={task.id} 
-                task={task} 
-                projects={projects} 
-                employees={employees} 
+                task={JSON.parse(JSON.stringify(task))} 
+                projects={JSON.parse(JSON.stringify(projects))} 
+                employees={JSON.parse(JSON.stringify(employees))} 
                 isManager={isManager} 
               />
             ))}
@@ -299,10 +299,10 @@ export function KanbanBoard({
       <DragOverlay>
         {activeTask ? (
           <SortableTask 
-            task={activeTask} 
+            task={JSON.parse(JSON.stringify(activeTask))} 
             isDraggingOverlay 
-            projects={projects} 
-            employees={employees} 
+            projects={JSON.parse(JSON.stringify(projects))} 
+            employees={JSON.parse(JSON.stringify(employees))} 
             isManager={isManager} 
           />
         ) : null}

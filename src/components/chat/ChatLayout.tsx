@@ -47,7 +47,7 @@ export function ChatLayout({
           rooms={rooms} 
           activeRoomId={activeRoomId} 
           onSelectRoom={setActiveRoomId}
-          employees={employees}
+          employees={JSON.parse(JSON.stringify(employees))}
           onRoomCreated={async (newRoomId) => {
             setActiveRoomId(newRoomId);
             // Instantly fetch the new room list so the UI updates without waiting for polling

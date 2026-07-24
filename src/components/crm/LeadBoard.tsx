@@ -68,7 +68,7 @@ export function LeadBoard({ leads }: { leads: Lead[] }) {
                     <div className="font-bold text-foreground pr-10">{lead.company}</div>
                     
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <UpdateLeadModal lead={lead} />
+                      <UpdateLeadModal lead={JSON.parse(JSON.stringify(lead))} />
                       <select 
                         className="text-xs bg-muted border-none rounded p-1 cursor-pointer"
                         value={lead.status}

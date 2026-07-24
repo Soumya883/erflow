@@ -55,7 +55,7 @@ export default async function HelpdeskPage() {
       </div>
 
       <div className="mt-8">
-        <TicketList tickets={tickets} employees={employees} isAdmin={isAdminOrManager} />
+        <TicketList tickets={tickets} employees={JSON.parse(JSON.stringify(employees))} isAdmin={isAdminOrManager} />
       </div>
     </div>
   );

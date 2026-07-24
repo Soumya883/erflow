@@ -164,7 +164,7 @@ export default async function ProfilePage() {
                           }`}>
                             {goal.status.replace("_", " ")}
                           </span>
-                          <EditGoalModal goal={goal} />
+                          <EditGoalModal goal={JSON.parse(JSON.stringify(goal))} />
                           <UpdateGoalModal 
                             goalId={goal.id} 
                             currentProgress={goal.progress} 

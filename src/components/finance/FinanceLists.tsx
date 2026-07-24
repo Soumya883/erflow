@@ -61,7 +61,7 @@ export function ExpenseList({ expenses }: { expenses: any[] }) {
               </div>
               
               <div className="flex items-center gap-2">
-                <UpdateExpenseModal expense={expense} />
+                <UpdateExpenseModal expense={JSON.parse(JSON.stringify(expense))} />
                 <select 
                   className="text-sm bg-muted border-none rounded-lg p-2 cursor-pointer font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   value={expense.status}
@@ -134,7 +134,7 @@ export function InvoiceList({ invoices, clients }: { invoices: any[], clients: a
               </div>
               
               <div className="flex items-center gap-2">
-                <UpdateInvoiceModal invoice={invoice} clients={clients} />
+                <UpdateInvoiceModal invoice={JSON.parse(JSON.stringify(invoice))} clients={clients} />
                 <select 
                   className="text-sm bg-muted border-none rounded-lg p-2 cursor-pointer font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   value={invoice.status}

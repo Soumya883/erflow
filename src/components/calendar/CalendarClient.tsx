@@ -167,7 +167,7 @@ export function CalendarClient({
           open={isModalOpen} 
           onOpenChange={setIsModalOpen}
           date={selectedDate}
-          employees={employees}
+          employees={JSON.parse(JSON.stringify(employees))}
         />
       )}
     </div>

@@ -190,7 +190,7 @@ export function KanbanBoard() {
                 >
                   <div className="min-h-[100px]" /* Droppable area even if empty */>
                     {colTasks.map((task) => (
-                      <SortableTaskItem key={task.id} task={task} />
+                      <SortableTaskItem key={task.id} task={JSON.parse(JSON.stringify(task))} />
                     ))}
                   </div>
                 </SortableContext>

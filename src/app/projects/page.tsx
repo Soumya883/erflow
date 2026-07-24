@@ -43,7 +43,7 @@ export default async function ProjectsPage() {
                 <div className="flex items-center gap-2">
                   {isManager && (
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <UpdateProjectModal project={project} />
+                      <UpdateProjectModal project={JSON.parse(JSON.stringify(project))} />
                     </div>
                   )}
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${

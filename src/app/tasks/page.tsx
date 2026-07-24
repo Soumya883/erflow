@@ -52,19 +52,19 @@ export default async function TasksPage({ searchParams }: { searchParams: { proj
         </div>
         <CreateTaskModal 
           isManager={isManager} 
-          projects={projects} 
-          employees={employees} 
+          projects={JSON.parse(JSON.stringify(projects))} 
+          employees={JSON.parse(JSON.stringify(employees))} 
           defaultProjectId={searchParams.projectId}
         />
       </div>
 
       <div className="flex-1 overflow-hidden">
         <KanbanBoard 
-          initialTasks={tasks} 
+          initialTasks={JSON.parse(JSON.stringify(tasks))} 
           userRole={user.role} 
           userId={user.id}
-          projects={projects}
-          employees={employees}
+          projects={JSON.parse(JSON.stringify(projects))}
+          employees={JSON.parse(JSON.stringify(employees))}
           isManager={isManager}
         />
       </div>

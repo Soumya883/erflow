@@ -103,9 +103,9 @@ export default async function AssetsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <UpdateAssetModal asset={asset} />
+                        <UpdateAssetModal asset={JSON.parse(JSON.stringify(asset))} />
                         {!currentAssignment ? (
-                          <AssignAssetModal assetId={asset.id} assetName={asset.name} employees={employeeOptions} />
+                          <AssignAssetModal assetId={asset.id} assetName={asset.name} employees={JSON.parse(JSON.stringify(employeeOptions))} />
                         ) : (
                           <ReturnAssetModal assignmentId={currentAssignment.id} assetName={asset.name} employeeName={currentAssignment.employee.user.name} />
                         )}

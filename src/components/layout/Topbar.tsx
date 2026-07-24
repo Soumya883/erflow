@@ -14,20 +14,80 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Moon, Sun, User, Settings, LogOut, Menu, Search } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { navGroups } from "./Sidebar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 import { CommandPalette } from "./CommandPalette";
 
 export function Topbar() {
   const { setTheme, theme } = useTheme();
   const [commandOpen, setCommandOpen] = useState(false);
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || "EMPLOYEE";
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <>
       <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-4 sm:px-6 shadow-sm transition-colors duration-200">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="sm:hidden">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="sm:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0 bg-sidebar border-r-border overflow-y-auto">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <div className="flex items-center gap-2 px-6 py-6 border-b border-border">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold shadow-sm">
+                  OF
+                </div>
+                <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">
+                  OfficeFlow
+                </span>
+              </div>
+              <nav className="flex-1 space-y-6 px-4 py-6">
+                {navGroups
+                  .filter(group => !group.roles || group.roles.includes(userRole))
+                  .map((group) => (
+                  <div key={group.label}>
+                    <h4 className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {group.label}
+                    </h4>
+                    <div className="space-y-1">
+                      {group.items
+                        .filter(item => !item.roles || item.roles.includes(userRole))
+                        .map((item) => {
+                        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setSheetOpen(false)}
+                            className={cn(
+                              "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                              isActive
+                                ? "bg-sidebar-accent text-primary shadow-sm"
+                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                            )}
+                          >
+                            <Icon className={cn("h-4 w-4 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-sidebar-foreground")} />
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
 
           <Button
             variant="outline"

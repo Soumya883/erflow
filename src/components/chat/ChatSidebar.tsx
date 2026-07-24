@@ -78,7 +78,7 @@ export function ChatSidebar({
       <NewChatModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        employees={employees}
+        employees={JSON.parse(JSON.stringify(employees))}
         onRoomCreated={(id) => {
           setIsModalOpen(false);
           onRoomCreated(id);

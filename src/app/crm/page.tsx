@@ -54,7 +54,7 @@ export default async function CRMPage() {
             {clients.map(client => (
               <div key={client.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all relative group">
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <UpdateClientModal client={client} />
+                  <UpdateClientModal client={JSON.parse(JSON.stringify(client))} />
                 </div>
                 <div className="flex items-start justify-between mb-4">
                   <div>

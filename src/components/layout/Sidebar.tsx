@@ -29,10 +29,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type NavItem = { name: string; href: string; icon: any; roles?: string[] };
-type NavGroup = { label: string; items: NavItem[]; roles?: string[] };
+export type NavItem = { name: string; href: string; icon: any; roles?: string[] };
+export type NavGroup = { label: string; items: NavItem[]; roles?: string[] };
 
-const navGroups: NavGroup[] = [
+export const navGroups: NavGroup[] = [
   {
     label: "Core",
     items: [

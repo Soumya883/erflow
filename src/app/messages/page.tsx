@@ -26,7 +26,7 @@ export default async function MessagesPage() {
       </div>
 
       <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        <ChatLayout initialRooms={initialRooms} employees={employees} />
+        <ChatLayout initialRooms={initialRooms} employees={JSON.parse(JSON.stringify(employees))} />
       </div>
     </div>
   );

@@ -32,14 +32,14 @@ export default async function AppraisalsPage() {
             Conduct and track employee performance reviews.
           </p>
         </div>
-        <CreateReviewModal employees={employeeOptions} />
+        <CreateReviewModal employees={JSON.parse(JSON.stringify(employeeOptions))} />
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         {reviews.map((review) => (
           <div key={review.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col sm:flex-row gap-6 transition-all hover:shadow-md relative group">
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <UpdateReviewModal review={review} />
+              <UpdateReviewModal review={JSON.parse(JSON.stringify(review))} />
             </div>
             <div className="flex-1 space-y-4">
               <div className="flex items-center justify-between pr-10">
@@ -85,7 +85,7 @@ export default async function AppraisalsPage() {
             <TrendingUp className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-lg font-medium text-foreground">No Reviews Found</h3>
             <p className="text-muted-foreground mt-1 mb-4">Start by conducting your first performance review.</p>
-            <CreateReviewModal employees={employeeOptions} />
+            <CreateReviewModal employees={JSON.parse(JSON.stringify(employeeOptions))} />
           </div>
         )}
       </div>

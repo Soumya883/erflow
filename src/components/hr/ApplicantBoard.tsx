@@ -5,6 +5,7 @@ import { User, Mail, Phone, ExternalLink, MoreVertical } from "lucide-react";
 import { updateApplicantStatus } from "@/app/actions/hr";
 import { toast } from "sonner";
 import { AddApplicantModal } from "./AddApplicantModal";
+import { UpdateApplicantModal } from "./UpdateApplicantModal";
 
 type Applicant = {
   id: string;
@@ -71,8 +72,8 @@ export function ApplicantBoard({ job }: { job: Job }) {
                   <div key={applicant.id} className="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-all relative group">
                     <div className="flex justify-between items-start mb-2">
                       <div className="font-medium text-foreground">{applicant.name}</div>
-                      
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <UpdateApplicantModal applicant={applicant} jobs={[]} />
                         <select 
                           className="text-xs bg-muted border-none rounded p-1 cursor-pointer"
                           value={applicant.status}

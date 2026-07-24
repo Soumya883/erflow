@@ -52,7 +52,7 @@ export default async function FinancePage() {
             <FileText className="h-5 w-5 text-primary" />
             Invoices
           </h2>
-          <InvoiceList invoices={invoices} />
+          <InvoiceList invoices={invoices} clients={clients} />
         </div>
       </div>
     </div>

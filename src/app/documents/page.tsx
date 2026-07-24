@@ -1,6 +1,8 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { CreateDocumentModal } from "@/components/documents/CreateDocumentModal";
+import { UpdateDocumentModal } from "@/components/documents/UpdateDocumentModal";
+import { DeleteDocumentButton } from "@/components/documents/DeleteDocumentButton";
 import { FileText, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -45,11 +47,12 @@ export default async function DocumentsPage() {
                 {isAdminOrManager && <th className="px-6 py-4 font-medium">Owner</th>}
                 <th className="px-6 py-4 font-medium">Added</th>
                 <th className="px-6 py-4 font-medium">Link</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {documents.map(doc => (
-                <tr key={doc.id} className="hover:bg-muted/50 transition-colors">
+                <tr key={doc.id} className="hover:bg-muted/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3 font-medium">
                       <div className="p-2 bg-primary/10 text-primary rounded-lg">
@@ -60,7 +63,7 @@ export default async function DocumentsPage() {
                   </td>
                   {isAdminOrManager && (
                     <td className="px-6 py-4 text-muted-foreground">
-                      {doc.employee.user.name}
+                      {doc.employee?.user?.name || "Unknown"}
                     </td>
                   )}
                   <td className="px-6 py-4 text-muted-foreground">
@@ -75,6 +78,16 @@ export default async function DocumentsPage() {
                     >
                       View <ExternalLink className="h-3 w-3" />
                     </a>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {(doc.uploadedById === user.id || isAdminOrManager) && (
+                        <>
+                          <UpdateDocumentModal document={doc} />
+                          <DeleteDocumentButton id={doc.id} />
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -38,6 +38,39 @@ export async function createDepartment(name: string) {
   revalidatePath("/departments");
 }
 
+export async function updateDepartment(id: string, name: string) {
+  const user = await requireAuth(["ADMIN"]);
+
+  if (!name.trim()) {
+    throw new Error("Department name is required");
+  }
+
+  const existing = await prisma.department.findUnique({
+    where: { name: name.trim() }
+  });
+
+  if (existing && existing.id !== id) {
+    throw new Error("A department with this name already exists");
+  }
+
+  const dept = await prisma.department.update({
+    where: { id },
+    data: { name: name.trim() }
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "UPDATE",
+      entity: "DEPARTMENT",
+      entityId: dept.id,
+      userId: user.id,
+      details: `Updated department to: ${name}`
+    }
+  });
+
+  revalidatePath("/departments");
+}
+
 export async function deleteDepartment(id: string) {
   const user = await requireAuth(["ADMIN"]); // Only admins can delete
 

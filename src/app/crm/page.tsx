@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { AddLeadModal } from "@/components/crm/AddLeadModal";
 import { AddClientModal } from "@/components/crm/AddClientModal";
+import { UpdateClientModal } from "@/components/crm/UpdateClientModal";
 import { LeadBoard } from "@/components/crm/LeadBoard";
 import { Users, Building, Mail, MapPin } from "lucide-react";
 
@@ -51,10 +52,13 @@ export default async function CRMPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {clients.map(client => (
-              <div key={client.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all">
+              <div key={client.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all relative group">
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <UpdateClientModal client={client} />
+                </div>
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-bold">{client.company}</h3>
+                    <h3 className="text-lg font-bold pr-8">{client.company}</h3>
                     <p className="text-sm font-medium text-muted-foreground">{client.name}</p>
                   </div>
                   <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">

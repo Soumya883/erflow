@@ -37,6 +37,37 @@ export async function createDocument(formData: FormData) {
   revalidatePath("/documents");
 }
 
+export async function updateDocument(id: string, formData: FormData) {
+  const user = await requireAuth();
+
+  const doc = await prisma.document.findUnique({ where: { id } });
+  
+  if (!doc) {
+    throw new Error("Document not found");
+  }
+
+  if (doc.uploadedById !== user.id && user.role === "EMPLOYEE") {
+    throw new Error("Forbidden: You can only update your own documents");
+  }
+
+  const name = formData.get("name") as string;
+  const fileUrl = formData.get("fileUrl") as string;
+  
+  if (!name || !fileUrl) {
+    throw new Error("Name and File URL are required");
+  }
+
+  await prisma.document.update({
+    where: { id },
+    data: {
+      name,
+      fileUrl
+    }
+  });
+
+  revalidatePath("/documents");
+}
+
 export async function deleteDocument(id: string) {
   const user = await requireAuth();
 

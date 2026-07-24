@@ -61,14 +61,79 @@ export async function createInvoice(data: {
 
 export async function updateInvoiceStatus(id: string, status: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED") {
   await requireAuth(["ADMIN", "MANAGER"]);
+
   try {
     const invoice = await prisma.invoice.update({
       where: { id },
-      data: { status }
+      data: { status },
     });
     revalidatePath("/finance");
     return { success: true, data: invoice };
   } catch (error: any) {
     return { error: error.message || "Failed to update invoice status" };
+  }
+}
+
+export async function updateExpense(
+  id: string,
+  data: {
+    title?: string;
+    amount?: number;
+    category?: string;
+    date?: Date;
+    notes?: string;
+    receiptUrl?: string;
+  }
+) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const expense = await prisma.expense.update({ where: { id }, data });
+    revalidatePath("/finance");
+    return { success: true, data: expense };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update expense" };
+  }
+}
+
+export async function deleteExpense(id: string) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    await prisma.expense.delete({ where: { id } });
+    revalidatePath("/finance");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete expense" };
+  }
+}
+
+export async function updateInvoice(
+  id: string,
+  data: {
+    invoiceNo?: string;
+    amount?: number;
+    issueDate?: Date;
+    dueDate?: Date;
+    notes?: string;
+    clientId?: string;
+  }
+) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const invoice = await prisma.invoice.update({ where: { id }, data });
+    revalidatePath("/finance");
+    return { success: true, data: invoice };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update invoice" };
+  }
+}
+
+export async function deleteInvoice(id: string) {
+  await requireAuth(["ADMIN"]);
+  try {
+    await prisma.invoice.delete({ where: { id } });
+    revalidatePath("/finance");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete invoice" };
   }
 }

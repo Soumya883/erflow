@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { CreateReviewModal } from "@/components/hr/CreateReviewModal";
+import { UpdateReviewModal } from "@/components/hr/UpdateReviewModal";
 import { TrendingUp, User, Calendar } from "lucide-react";
 import Link from "next/link";
 
@@ -36,9 +37,12 @@ export default async function AppraisalsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {reviews.map((review) => (
-          <div key={review.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col sm:flex-row gap-6 transition-all hover:shadow-md">
+          <div key={review.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col sm:flex-row gap-6 transition-all hover:shadow-md relative group">
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <UpdateReviewModal review={review} />
+            </div>
             <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pr-10">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                     <TrendingUp className="h-5 w-5" />

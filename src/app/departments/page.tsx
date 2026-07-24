@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { CreateDepartmentModal } from "@/components/departments/CreateDepartmentModal";
+import { UpdateDepartmentModal } from "@/components/departments/UpdateDepartmentModal";
 import { DeleteDepartmentButton } from "@/components/departments/DeleteDepartmentButton";
 import { Users, Building2 } from "lucide-react";
 import Link from "next/link";
@@ -43,7 +44,10 @@ export default async function DepartmentsPage() {
                   <h3 className="text-xl font-bold">{dept.name}</h3>
                 </div>
                 {user.role === "ADMIN" && (
-                  <DeleteDepartmentButton id={dept.id} name={dept.name} disabled={empCount > 0} />
+                  <div className="flex items-center gap-2">
+                    <UpdateDepartmentModal department={dept} />
+                    <DeleteDepartmentButton id={dept.id} name={dept.name} disabled={empCount > 0} />
+                  </div>
                 )}
               </div>
               

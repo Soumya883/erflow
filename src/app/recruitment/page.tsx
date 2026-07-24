@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
+import { UpdateJobPostingModal } from "@/components/hr/UpdateJobPostingModal";
 import { CreateJobModal } from "@/components/hr/CreateJobModal";
 import { ApplicantBoard } from "@/components/hr/ApplicantBoard";
 import { Briefcase, MapPin } from "lucide-react";
@@ -56,8 +57,11 @@ export default async function RecruitmentPage() {
                     </div>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-bold ${job.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {job.isActive ? 'ACTIVE' : 'CLOSED'}
+                <div className="flex items-center gap-3">
+                  <UpdateJobPostingModal job={job} departments={departments} />
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${job.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {job.isActive ? 'ACTIVE' : 'CLOSED'}
+                  </div>
                 </div>
               </div>
               <p className="mt-4 text-sm text-muted-foreground whitespace-pre-wrap">{job.description}</p>

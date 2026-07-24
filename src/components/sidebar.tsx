@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Employees", href: "/admin/employees", icon: Users },
   { name: "Workflows", href: "/admin/workflows", icon: Kanban },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
@@ -36,7 +37,8 @@ export function Sidebar() {
     if (role === "HR") {
       return [
         { name: "Command Center", href: "/hr", icon: LayoutDashboard },
-        { name: "Attendance", href: "/hr/attendance", icon: Calendar },
+        { name: "Calendar", href: "/calendar", icon: Calendar },
+        { name: "Attendance", href: "/attendance", icon: Clock },
         { name: "Employees", href: "/admin/employees", icon: Users },
         { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
         { name: "My Attendance Kiosk", href: "/employee", icon: Clock },

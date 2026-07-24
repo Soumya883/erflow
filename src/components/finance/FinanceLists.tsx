@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { updateExpenseStatus, updateInvoiceStatus } from "@/app/actions/finance";
 import { toast } from "sonner";
-import { Receipt, FileText } from "lucide-react";
+import { CheckCircle, XCircle, FileText, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
+import { UpdateExpenseModal } from "./UpdateExpenseModal";
+import { UpdateInvoiceModal } from "./UpdateInvoiceModal";
 
 export function ExpenseList({ expenses }: { expenses: any[] }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -23,49 +25,64 @@ export function ExpenseList({ expenses }: { expenses: any[] }) {
 
   return (
     <div className="space-y-4">
-      {expenses.map(exp => (
-        <div key={exp.id} className="p-4 rounded-xl border border-border bg-card flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-              <Receipt className="h-5 w-5" />
+      {expenses.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border">
+          No expenses recorded yet.
+        </div>
+      ) : (
+        expenses.map(expense => (
+          <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-all gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${
+                expense.status === "APPROVED" || expense.status === "PAID" 
+                  ? "bg-emerald-100 text-emerald-600" 
+                  : expense.status === "REJECTED"
+                  ? "bg-red-100 text-red-600"
+                  : "bg-amber-100 text-amber-600"
+              }`}>
+                <ArrowDownRight className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-foreground">{expense.title}</h4>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                  <span className="font-medium">{expense.category}</span>
+                  <span>•</span>
+                  <span>{new Date(expense.date).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span>{expense.employee.user.name}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="font-bold">{exp.title}</div>
-              <div className="text-sm text-muted-foreground">{exp.employee.user.name} • {new Date(exp.date).toLocaleDateString()}</div>
+            
+            <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6">
+              <div className="text-right">
+                <div className="font-bold text-lg">₹{expense.amount.toLocaleString()}</div>
+                <div className="text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wider">{expense.status}</div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <UpdateExpenseModal expense={expense} />
+                <select 
+                  className="text-sm bg-muted border-none rounded-lg p-2 cursor-pointer font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={expense.status}
+                  onChange={(e) => handleStatusChange(expense.id, e.target.value)}
+                  disabled={loadingId === expense.id}
+                >
+                  <option value="PENDING">Pending</option>
+                  <option value="APPROVED">Approve</option>
+                  <option value="PAID">Mark Paid</option>
+                  <option value="REJECTED">Reject</option>
+                </select>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="text-lg font-bold">₹{exp.amount.toLocaleString()}</div>
-            <select 
-              className={`text-xs font-bold rounded-full px-3 py-1 cursor-pointer border-none ${
-                exp.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
-                exp.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                exp.status === 'PAID' ? 'bg-blue-100 text-blue-800' :
-                'bg-amber-100 text-amber-800'
-              }`}
-              value={exp.status}
-              onChange={(e) => handleStatusChange(exp.id, e.target.value)}
-              disabled={loadingId === exp.id}
-            >
-              <option value="PENDING">PENDING</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="REJECTED">REJECTED</option>
-              <option value="PAID">PAID</option>
-            </select>
-          </div>
-        </div>
-      ))}
-      {expenses.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-          No expenses recorded.
-        </div>
+        ))
       )}
     </div>
   );
 }
 
-export function InvoiceList({ invoices }: { invoices: any[] }) {
+export function InvoiceList({ invoices, clients }: { invoices: any[], clients: any[] }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleStatusChange = async (id: string, status: any) => {
@@ -83,45 +100,57 @@ export function InvoiceList({ invoices }: { invoices: any[] }) {
 
   return (
     <div className="space-y-4">
-      {invoices.map(inv => (
-        <div key={inv.id} className="p-4 rounded-xl border border-border bg-card flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-              <FileText className="h-5 w-5" />
+      {invoices.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border">
+          No invoices generated yet.
+        </div>
+      ) : (
+        invoices.map(invoice => (
+          <div key={invoice.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-all gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${
+                invoice.status === "PAID" 
+                  ? "bg-emerald-100 text-emerald-600" 
+                  : invoice.status === "OVERDUE"
+                  ? "bg-red-100 text-red-600"
+                  : invoice.status === "SENT"
+                  ? "bg-blue-100 text-blue-600"
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                <ArrowUpRight className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-foreground">{invoice.client?.company} <span className="text-muted-foreground font-normal ml-2">#{invoice.invoiceNo}</span></h4>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Due {new Date(invoice.dueDate).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="font-bold">{inv.invoiceNo} • {inv.client.company}</div>
-              <div className="text-sm text-muted-foreground">Due: {new Date(inv.dueDate).toLocaleDateString()}</div>
+            
+            <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6">
+              <div className="text-right">
+                <div className="font-bold text-lg">₹{invoice.amount.toLocaleString()}</div>
+                <div className="text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wider">{invoice.status}</div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <UpdateInvoiceModal invoice={invoice} clients={clients} />
+                <select 
+                  className="text-sm bg-muted border-none rounded-lg p-2 cursor-pointer font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={invoice.status}
+                  onChange={(e) => handleStatusChange(invoice.id, e.target.value)}
+                  disabled={loadingId === invoice.id}
+                >
+                  <option value="DRAFT">Draft</option>
+                  <option value="SENT">Mark Sent</option>
+                  <option value="PAID">Mark Paid</option>
+                  <option value="OVERDUE">Overdue</option>
+                  <option value="CANCELLED">Cancel</option>
+                </select>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="text-lg font-bold">₹{inv.amount.toLocaleString()}</div>
-            <select 
-              className={`text-xs font-bold rounded-full px-3 py-1 cursor-pointer border-none ${
-                inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-800' :
-                inv.status === 'OVERDUE' ? 'bg-red-100 text-red-800' :
-                inv.status === 'SENT' ? 'bg-blue-100 text-blue-800' :
-                inv.status === 'CANCELLED' ? 'bg-gray-100 text-gray-800' :
-                'bg-amber-100 text-amber-800'
-              }`}
-              value={inv.status}
-              onChange={(e) => handleStatusChange(inv.id, e.target.value)}
-              disabled={loadingId === inv.id}
-            >
-              <option value="DRAFT">DRAFT</option>
-              <option value="SENT">SENT</option>
-              <option value="PAID">PAID</option>
-              <option value="OVERDUE">OVERDUE</option>
-              <option value="CANCELLED">CANCELLED</option>
-            </select>
-          </div>
-        </div>
-      ))}
-      {invoices.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-          No invoices recorded.
-        </div>
+        ))
       )}
     </div>
   );

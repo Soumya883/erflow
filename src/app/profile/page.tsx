@@ -4,6 +4,7 @@ import { User, Mail, Briefcase, Building, Calendar, DollarSign, Edit, Target, Tr
 import Link from "next/link";
 import { CreateGoalModal } from "@/components/hr/CreateGoalModal";
 import { UpdateGoalModal } from "@/components/hr/UpdateGoalModal";
+import { EditGoalModal } from "@/components/hr/EditGoalModal";
 
 export default async function ProfilePage() {
   const user = await requireAuth();
@@ -163,6 +164,7 @@ export default async function ProfilePage() {
                           }`}>
                             {goal.status.replace("_", " ")}
                           </span>
+                          <EditGoalModal goal={goal} />
                           <UpdateGoalModal 
                             goalId={goal.id} 
                             currentProgress={goal.progress} 

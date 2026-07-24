@@ -61,6 +61,17 @@ export async function deleteGoal(id: string) {
   }
 }
 
+export async function updateGoal(id: string, data: { title?: string; description?: string; dueDate?: Date }) {
+  await requireAuth(["ADMIN", "MANAGER", "EMPLOYEE"]);
+  try {
+    const goal = await prisma.goal.update({ where: { id }, data });
+    revalidatePath("/profile");
+    return { success: true, data: goal };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update goal" };
+  }
+}
+
 // ========================
 // PERFORMANCE REVIEW ACTIONS
 // ========================
@@ -98,16 +109,41 @@ export async function createPerformanceReview(data: {
   }
 }
 
+export async function updatePerformanceReview(id: string, data: { reviewPeriod?: string; rating?: number; comments?: string }) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const review = await prisma.performanceReview.update({ where: { id }, data });
+    revalidatePath("/appraisals");
+    revalidatePath("/profile");
+    return { success: true, data: review };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update performance review" };
+  }
+}
+
+export async function deletePerformanceReview(id: string) {
+  await requireAuth(["ADMIN"]);
+  try {
+    await prisma.performanceReview.delete({ where: { id } });
+    revalidatePath("/appraisals");
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete performance review" };
+  }
+}
+
 // ========================
-// RECRUITMENT (ATS) ACTIONS
+// RECRUITMENT ACTIONS
 // ========================
 
 export async function createJobPosting(data: {
   title: string;
+  departmentId: string;
   location: string;
   type: string;
   description: string;
-  departmentId?: string;
+  requirements: string;
 }) {
   await requireAuth(["ADMIN", "MANAGER"]);
 
@@ -120,22 +156,72 @@ export async function createJobPosting(data: {
   }
 }
 
+export async function updateJobPosting(id: string, data: { title?: string; departmentId?: string; location?: string; type?: string; description?: string; requirements?: string; status?: "OPEN" | "CLOSED" | "DRAFT" }) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const job = await prisma.jobPosting.update({ where: { id }, data });
+    revalidatePath("/recruitment");
+    return { success: true, data: job };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update job posting" };
+  }
+}
+
+export async function deleteJobPosting(id: string) {
+  await requireAuth(["ADMIN"]);
+  try {
+    await prisma.jobPosting.delete({ where: { id } });
+    revalidatePath("/recruitment");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete job posting" };
+  }
+}
+
 export async function addApplicant(data: {
   jobId: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   resumeUrl?: string;
-  notes?: string;
+  source?: string;
 }) {
   await requireAuth(["ADMIN", "MANAGER"]);
 
   try {
-    const applicant = await prisma.applicant.create({ data });
+    const applicant = await prisma.applicant.create({
+      data: {
+        ...data,
+        status: "APPLIED"
+      }
+    });
     revalidatePath("/recruitment");
     return { success: true, data: applicant };
   } catch (error: any) {
     return { error: error.message || "Failed to add applicant" };
+  }
+}
+
+export async function updateApplicant(id: string, data: { firstName?: string; lastName?: string; email?: string; phone?: string; resumeUrl?: string; source?: string }) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const applicant = await prisma.applicant.update({ where: { id }, data });
+    revalidatePath("/recruitment");
+    return { success: true, data: applicant };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update applicant" };
+  }
+}
+
+export async function deleteApplicant(id: string) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    await prisma.applicant.delete({ where: { id } });
+    revalidatePath("/recruitment");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete applicant" };
   }
 }
 

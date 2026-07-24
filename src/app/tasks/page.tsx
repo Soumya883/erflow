@@ -62,7 +62,10 @@ export default async function TasksPage({ searchParams }: { searchParams: { proj
         <KanbanBoard 
           initialTasks={tasks} 
           userRole={user.role} 
-          userId={user.id} 
+          userId={user.id}
+          projects={projects}
+          employees={employees}
+          isManager={isManager}
         />
       </div>
     </div>

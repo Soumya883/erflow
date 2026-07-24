@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
+import { UpdateProjectModal } from "@/components/projects/UpdateProjectModal";
 import Link from "next/link";
 import { FolderKanban, CheckSquare, Clock } from "lucide-react";
 
@@ -34,18 +35,25 @@ export default async function ProjectsPage() {
           const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
           return (
-            <div key={project.id} className="relative flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md">
+            <div key={project.id} className="relative flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md group">
               <div className="flex items-start justify-between mb-4">
                 <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
                   <FolderKanban className="h-5 w-5" />
                 </div>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  project.status === "ACTIVE" ? "bg-green-100 text-green-700" :
-                  project.status === "COMPLETED" ? "bg-blue-100 text-blue-700" :
-                  "bg-orange-100 text-orange-700"
-                }`}>
-                  {project.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  {isManager && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <UpdateProjectModal project={project} />
+                    </div>
+                  )}
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    project.status === "ACTIVE" ? "bg-green-100 text-green-700" :
+                    project.status === "COMPLETED" ? "bg-blue-100 text-blue-700" :
+                    "bg-orange-100 text-orange-700"
+                  }`}>
+                    {project.status}
+                  </span>
+                </div>
               </div>
               
               <h3 className="text-lg font-bold mb-1 truncate">{project.name}</h3>

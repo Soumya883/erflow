@@ -47,7 +47,6 @@ export async function createTask(data: { title: string; description?: string; pr
 export async function updateTaskStatus(taskId: string, status: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE") {
   const user = await requireAuth();
 
-  // Validate that the task exists
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { assignee: true }
@@ -57,7 +56,6 @@ export async function updateTaskStatus(taskId: string, status: "TODO" | "IN_PROG
     throw new Error("Task not found.");
   }
 
-  // Employees can only update their own tasks, unless they are Admin/Manager
   if (user.role === "EMPLOYEE") {
     const profile = await prisma.employeeProfile.findUnique({ where: { userId: user.id } });
     if (task.assigneeId !== profile?.id) {
@@ -72,4 +70,68 @@ export async function updateTaskStatus(taskId: string, status: "TODO" | "IN_PROG
 
   revalidatePath("/tasks");
   revalidatePath("/");
+}
+
+export async function updateProject(
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    status?: "ACTIVE" | "COMPLETED" | "ON_HOLD";
+  }
+) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const project = await prisma.project.update({ where: { id }, data });
+    revalidatePath("/projects");
+    return { success: true, data: project };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update project" };
+  }
+}
+
+export async function deleteProject(id: string) {
+  await requireAuth(["ADMIN"]);
+  try {
+    await prisma.project.delete({ where: { id } });
+    revalidatePath("/projects");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete project" };
+  }
+}
+
+export async function updateTask(
+  id: string,
+  data: {
+    title?: string;
+    description?: string;
+    priority?: string;
+    status?: string;
+    projectId?: string;
+    assigneeId?: string;
+    dueDate?: Date;
+  }
+) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    const task = await prisma.task.update({ where: { id }, data });
+    revalidatePath("/tasks");
+    revalidatePath("/projects");
+    return { success: true, data: task };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update task" };
+  }
+}
+
+export async function deleteTask(id: string) {
+  await requireAuth(["ADMIN", "MANAGER"]);
+  try {
+    await prisma.task.delete({ where: { id } });
+    revalidatePath("/tasks");
+    revalidatePath("/projects");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to delete task" };
+  }
 }

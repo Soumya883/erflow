@@ -32,7 +32,19 @@ const COLUMNS = [
   { id: 'DONE', title: 'Done', color: 'bg-green-500/10 text-green-700 border-green-200' },
 ];
 
-function SortableTask({ task, isDraggingOverlay = false }: { task: any, isDraggingOverlay?: boolean }) {
+function SortableTask({ 
+  task, 
+  isDraggingOverlay = false,
+  projects = [],
+  employees = [],
+  isManager = false
+}: { 
+  task: any;
+  isDraggingOverlay?: boolean;
+  projects?: any[];
+  employees?: any[];
+  isManager?: boolean;
+}) {
   const {
     attributes,
     listeners,
@@ -59,9 +71,20 @@ function SortableTask({ task, isDraggingOverlay = false }: { task: any, isDraggi
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${isDraggingOverlay ? 'shadow-xl scale-105 rotate-2 border-primary ring-2 ring-primary/20' : ''}`}
+      className={`relative flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group ${isDraggingOverlay ? 'shadow-xl scale-105 rotate-2 border-primary ring-2 ring-primary/20' : ''}`}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={e => e.stopPropagation()}>
+        {isManager && (
+          <UpdateTaskModal 
+            task={task} 
+            projects={projects} 
+            users={employees} 
+            isManager={isManager} 
+          />
+        )}
+      </div>
+      
+      <div className="flex items-start justify-between gap-2 pr-6">
         <h4 className="font-semibold text-sm leading-tight text-foreground line-clamp-2">{task.title}</h4>
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityColor}`}>
           {task.priority}
@@ -93,7 +116,23 @@ function SortableTask({ task, isDraggingOverlay = false }: { task: any, isDraggi
   );
 }
 
-export function KanbanBoard({ initialTasks, userRole, userId }: { initialTasks: any[], userRole: string, userId: string }) {
+import { UpdateTaskModal } from "./UpdateTaskModal";
+
+export function KanbanBoard({ 
+  initialTasks, 
+  userRole, 
+  userId,
+  projects,
+  employees,
+  isManager
+}: { 
+  initialTasks: any[]; 
+  userRole: string; 
+  userId: string;
+  projects?: any[];
+  employees?: any[];
+  isManager?: boolean;
+}) {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<any | null>(null);
 
@@ -223,7 +262,13 @@ export function KanbanBoard({ initialTasks, userRole, userId }: { initialTasks: 
         >
           <SortableContext items={tasksInColumn.map((t: any) => t.id)} strategy={verticalListSortingStrategy}>
             {tasksInColumn.map((task: any) => (
-              <SortableTask key={task.id} task={task} />
+              <SortableTask 
+                key={task.id} 
+                task={task} 
+                projects={projects} 
+                employees={employees} 
+                isManager={isManager} 
+              />
             ))}
           </SortableContext>
         </div>
@@ -252,7 +297,15 @@ export function KanbanBoard({ initialTasks, userRole, userId }: { initialTasks: 
       </div>
 
       <DragOverlay>
-        {activeTask ? <SortableTask task={activeTask} isDraggingOverlay /> : null}
+        {activeTask ? (
+          <SortableTask 
+            task={activeTask} 
+            isDraggingOverlay 
+            projects={projects} 
+            employees={employees} 
+            isManager={isManager} 
+          />
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

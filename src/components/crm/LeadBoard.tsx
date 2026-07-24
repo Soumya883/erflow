@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateLeadStatus } from "@/app/actions/crm";
 import { toast } from "sonner";
+import { UpdateLeadModal } from "./UpdateLeadModal";
 
 type Lead = {
   id: string;
@@ -64,9 +65,10 @@ export function LeadBoard({ leads }: { leads: Lead[] }) {
               {stageLeads.map(lead => (
                 <div key={lead.id} className="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-all relative group">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-bold text-foreground">{lead.company}</div>
+                    <div className="font-bold text-foreground pr-10">{lead.company}</div>
                     
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <UpdateLeadModal lead={lead} />
                       <select 
                         className="text-xs bg-muted border-none rounded p-1 cursor-pointer"
                         value={lead.status}

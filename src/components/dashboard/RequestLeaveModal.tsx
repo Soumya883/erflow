@@ -15,9 +15,13 @@ export function RequestLeaveModal() {
     
     try {
       const formData = new FormData(e.currentTarget);
-      await submitLeaveRequest(formData);
-      toast.success("Leave request submitted successfully");
-      setIsOpen(false);
+      const result = await submitLeaveRequest(formData);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Leave request submitted successfully");
+        setIsOpen(false);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to submit request");
     } finally {

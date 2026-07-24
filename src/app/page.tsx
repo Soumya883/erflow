@@ -9,7 +9,7 @@ import {
 import { ClockInOutButton } from "@/components/dashboard/ClockInOutButton";
 import { RequestLeaveModal } from "@/components/dashboard/RequestLeaveModal";
 import Link from "next/link";
-import { getIstTodayBounds } from "@/lib/utils";
+import { getIstTodayBounds, getIstTodayDate } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
@@ -19,6 +19,7 @@ export default async function DashboardPage() {
   });
 
   const { startOfToday, endOfToday } = getIstTodayBounds();
+  const exactToday = getIstTodayDate();
 
   // Fetch summary data
   const [employeeCount, projectCount, taskCount, myPendingTasks, todaysAttendance, myActiveTasks] = await Promise.all([
@@ -34,10 +35,7 @@ export default async function DashboardPage() {
     profile ? prisma.attendanceLog.findFirst({
       where: {
         employeeId: profile.id,
-        date: {
-          gte: startOfToday,
-          lt: endOfToday
-        }
+        date: exactToday
       }
     }) : null,
     profile ? prisma.task.findMany({

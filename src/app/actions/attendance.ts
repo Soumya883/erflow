@@ -3,7 +3,7 @@
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getIstTodayBounds } from "@/lib/utils";
+import { getIstTodayBounds, getIstTodayDate } from "@/lib/utils";
 
 export async function clockIn() {
   try {
@@ -18,17 +18,14 @@ export async function clockIn() {
       return { error: "Employee profile not found. Please contact HR to set up your profile." };
     }
 
-    // Get today's bounds in IST
-    const { startOfToday, endOfToday } = getIstTodayBounds();
+    // Get exact today date in IST
+    const exactToday = getIstTodayDate();
 
     // Check if they already clocked in today
     const existingLog = await prisma.attendanceLog.findFirst({
       where: {
         employeeId: profile.id,
-        date: {
-          gte: startOfToday,
-          lt: endOfToday
-        }
+        date: exactToday
       }
     });
 
@@ -39,7 +36,7 @@ export async function clockIn() {
     await prisma.attendanceLog.create({
       data: {
         employeeId: profile.id,
-        date: new Date(),
+        date: exactToday,
         checkIn: new Date(),
       }
     });
@@ -65,15 +62,12 @@ export async function clockOut() {
       return { error: "Employee profile not found. Please contact HR to set up your profile." };
     }
 
-    const { startOfToday, endOfToday } = getIstTodayBounds();
+    const exactToday = getIstTodayDate();
 
     const existingLog = await prisma.attendanceLog.findFirst({
       where: {
         employeeId: profile.id,
-        date: {
-          gte: startOfToday,
-          lt: endOfToday
-        }
+        date: exactToday
       }
     });
 

@@ -24,6 +24,8 @@ import {
   Package,
   TrendingUp,
   Briefcase,
+  Receipt,
+  LifeBuoy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -45,7 +47,14 @@ const navGroups: NavGroup[] = [
       { name: "Projects", href: "/projects", icon: FolderKanban },
       { name: "Tasks", href: "/tasks", icon: CheckSquare },
       { name: "Calendar", href: "/calendar", icon: CalendarRange },
-      { name: "Assets", href: "/assets", icon: Package },
+    ]
+  },
+  {
+    label: "Sales & Finance",
+    roles: ["ADMIN", "MANAGER"],
+    items: [
+      { name: "CRM & Clients", href: "/crm", icon: Users },
+      { name: "Finance & Accounting", href: "/finance", icon: Receipt },
     ]
   },
   {
@@ -54,6 +63,8 @@ const navGroups: NavGroup[] = [
       { name: "Messages", href: "/messages", icon: MessageSquare },
       { name: "Announcements", href: "/announcements", icon: Megaphone },
       { name: "Documents", href: "/documents", icon: Files },
+      { name: "Assets", href: "/assets", icon: Package },
+      { name: "Helpdesk", href: "/helpdesk", icon: LifeBuoy },
     ]
   },
   {

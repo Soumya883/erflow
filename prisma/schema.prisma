@@ -84,6 +84,9 @@ model EmployeeProfile {
   goals          Goal[]
   performanceReviews PerformanceReview[] @relation("Reviewee")
   reviewsGiven       PerformanceReview[] @relation("Reviewer")
+  expenses           Expense[]
+  ticketsCreated     Ticket[] @relation("TicketAuthor")
+  ticketsAssigned    Ticket[] @relation("TicketAssignee")
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -384,6 +387,135 @@ model Applicant {
 
   jobId     String
   job       JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// ========================
+// CRM & CLIENT MANAGEMENT
+// ========================
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  company   String
+  email     String
+  phone     String?
+  address   String?  @db.Text
+  
+  invoices  Invoice[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  company   String
+  email     String
+  phone     String?
+  value     Float?     // Estimated deal value
+  status    LeadStatus @default(NEW)
+  notes     String?    @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// ========================
+// FINANCE & ACCOUNTING
+// ========================
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  title       String
+  amount      Float
+  category    String        // e.g., Travel, Supplies, Software
+  date        DateTime      @db.Date
+  receiptUrl  String?
+  status      ExpenseStatus @default(PENDING)
+  notes       String?       @db.Text
+
+  employeeId  String
+  employee    EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  invoiceNo   String        @unique
+  amount      Float
+  issueDate   DateTime      @db.Date
+  dueDate     DateTime      @db.Date
+  status      InvoiceStatus @default(DRAFT)
+  notes       String?       @db.Text
+
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// ========================
+// OPERATIONS & HELPDESK
+// ========================
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  title       String
+  description String         @db.Text
+  category    String         // e.g., IT Support, HR, Maintenance
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+
+  authorId    String
+  author      EmployeeProfile @relation("TicketAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  assigneeId  String?
+  assignee    EmployeeProfile? @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)

@@ -50,3 +50,28 @@ export async function updateLeaveStatus(requestId: string, status: "APPROVED" | 
 
   revalidatePath("/leave");
 }
+
+export async function createLeaveAdmin(data: {
+  employeeId: string;
+  startDate: Date;
+  endDate: Date;
+  type: string;
+  reason?: string;
+}) {
+  await requireAuth(["MANAGER", "ADMIN"]);
+
+  await prisma.leaveRequest.create({
+    data: {
+      employeeId: data.employeeId,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      type: data.type,
+      reason: data.reason || "Added by Admin/Manager",
+      status: "APPROVED" // Since admin is adding it, approve it directly
+    }
+  });
+
+  revalidatePath("/calendar");
+  revalidatePath("/leave");
+  return { success: true };
+}

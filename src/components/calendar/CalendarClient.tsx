@@ -15,6 +15,7 @@ import {
   parseISO
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckSquare, Clock } from "lucide-react";
+import { MarkLeaveModal } from "./MarkLeaveModal";
 
 export type CalendarEvent = {
   id: string;
@@ -25,12 +26,29 @@ export type CalendarEvent = {
   user?: string;
 };
 
-export function CalendarClient({ events }: { events: CalendarEvent[] }) {
+export function CalendarClient({ 
+  events,
+  isAdmin = false,
+  employees = []
+}: { 
+  events: CalendarEvent[];
+  isAdmin?: boolean;
+  employees?: { id: string, name: string }[];
+}) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToToday = () => setCurrentMonth(new Date());
+
+  const handleDateClick = (day: Date) => {
+    if (isAdmin) {
+      setSelectedDate(day);
+      setIsModalOpen(true);
+    }
+  };
 
   const renderHeader = () => {
     return (
@@ -89,7 +107,8 @@ export function CalendarClient({ events }: { events: CalendarEvent[] }) {
         days.push(
           <div 
             key={day.toISOString()} 
-            className={`min-h-[120px] p-2 border border-border/50 bg-card ${
+            onClick={() => handleDateClick(cloneDay)}
+            className={`min-h-[120px] p-2 border border-border/50 bg-card ${isAdmin ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''} ${
               !isSameMonth(day, monthStart)
                 ? "text-muted-foreground/50 bg-muted/20"
                 : isSameDay(day, new Date())
@@ -142,6 +161,15 @@ export function CalendarClient({ events }: { events: CalendarEvent[] }) {
       {renderHeader()}
       {renderDays()}
       {renderCells()}
+      
+      {isAdmin && selectedDate && (
+        <MarkLeaveModal 
+          open={isModalOpen} 
+          onOpenChange={setIsModalOpen}
+          date={selectedDate}
+          employees={employees}
+        />
+      )}
     </div>
   );
 }

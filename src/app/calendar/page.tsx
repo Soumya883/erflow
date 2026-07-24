@@ -5,7 +5,8 @@ import { startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
 export default async function CalendarPage() {
-  await requireAuth();
+  const user = await requireAuth();
+  const isAdmin = user.role === "ADMIN" || user.role === "MANAGER";
 
   // We fetch a wide range of dates so the calendar can navigate a bit without full reloads,
   // or we just fetch everything active if it's small.
@@ -38,6 +39,11 @@ export default async function CalendarPage() {
     include: {
       employee: { include: { user: true } }
     }
+  });
+
+  const employees = await prisma.employeeProfile.findMany({
+    include: { user: true },
+    orderBy: { user: { name: "asc" } }
   });
 
   const events: CalendarEvent[] = [];
@@ -78,12 +84,12 @@ export default async function CalendarPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Company Calendar</h1>
         <p className="text-muted-foreground mt-1">
-          View upcoming tasks and approved leave schedules.
+          View upcoming tasks and approved leave schedules. Click on a date to mark leave (HR/Admin only).
         </p>
       </div>
 
       <div className="flex-1 bg-card rounded-2xl border border-border p-6 shadow-sm overflow-auto">
-        <CalendarClient events={events} />
+        <CalendarClient events={events} isAdmin={isAdmin} employees={employees.map(e => ({ id: e.id, name: e.user.name }))} />
       </div>
     </div>
   );

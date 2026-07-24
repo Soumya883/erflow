@@ -10,10 +10,12 @@ import { returnAsset } from "@/app/actions/assets";
 
 export function ReturnAssetModal({ 
   assignmentId, 
-  assetName 
+  assetName,
+  employeeName
 }: { 
   assignmentId: string;
   assetName: string;
+  employeeName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

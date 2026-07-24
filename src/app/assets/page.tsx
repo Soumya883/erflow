@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { CreateAssetModal } from "@/components/assets/CreateAssetModal";
 import { AssignAssetModal } from "@/components/assets/AssignAssetModal";
 import { ReturnAssetModal } from "@/components/assets/ReturnAssetModal";
+import { UpdateAssetModal } from "@/components/assets/UpdateAssetModal";
 import { MonitorSmartphone, Laptop, Armchair, Box, Code } from "lucide-react";
 
 export default async function AssetsPage() {
@@ -101,12 +102,14 @@ export default async function AssetsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {asset.status === "AVAILABLE" && (
-                        <AssignAssetModal assetId={asset.id} assetName={asset.name} employees={employeeOptions} />
-                      )}
-                      {asset.status === "ASSIGNED" && currentAssignment && (
-                        <ReturnAssetModal assignmentId={currentAssignment.id} assetName={asset.name} />
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        <UpdateAssetModal asset={asset} />
+                        {!currentAssignment ? (
+                          <AssignAssetModal assetId={asset.id} assetName={asset.name} employees={employeeOptions} />
+                        ) : (
+                          <ReturnAssetModal assignmentId={currentAssignment.id} assetName={asset.name} employeeName={currentAssignment.employee.user.name} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

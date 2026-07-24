@@ -80,6 +80,10 @@ model EmployeeProfile {
   spreadsheets   Spreadsheet[]
   chatRooms      ChatParticipant[]
   chatMessages   ChatMessage[]
+  assetAssignments AssetAssignment[]
+  goals          Goal[]
+  performanceReviews PerformanceReview[] @relation("Reviewee")
+  reviewsGiven       PerformanceReview[] @relation("Reviewer")
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -90,6 +94,7 @@ model Department {
   name String @unique
 
   employees EmployeeProfile[]
+  jobPostings JobPosting[]
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -250,6 +255,135 @@ model ChatMessage {
 
   authorId String
   author   EmployeeProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum AssetCategory {
+  LAPTOP
+  FURNITURE
+  PERIPHERAL
+  SOFTWARE
+  OTHER
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  RETIRED
+}
+
+model Asset {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?       @db.Text
+  serialNumber String?
+  category     AssetCategory @default(OTHER)
+  status       AssetStatus   @default(AVAILABLE)
+  purchaseDate DateTime?     @db.Date
+  value        Float?        @default(0)
+
+  assignments  AssetAssignment[]
+
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model AssetAssignment {
+  id         String          @id @default(cuid())
+  
+  assetId    String
+  asset      Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  assignedDate       DateTime  @db.Date
+  expectedReturnDate DateTime? @db.Date
+  returnedDate       DateTime? @db.Date
+  notes              String?   @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum GoalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicantStatus {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFERED
+  HIRED
+  REJECTED
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  progress    Int        @default(0)
+  status      GoalStatus @default(PENDING)
+  dueDate     DateTime?  @db.Date
+  
+  employeeId  String
+  employee    EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model PerformanceReview {
+  id           String @id @default(cuid())
+  reviewPeriod String // e.g., "Q1 2026", "Annual 2026"
+  rating       Int    // 1 to 5
+  comments     String @db.Text
+
+  employeeId   String
+  employee     EmployeeProfile @relation("Reviewee", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  reviewerId   String
+  reviewer     EmployeeProfile @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model JobPosting {
+  id          String   @id @default(cuid())
+  title       String
+  location    String
+  type        String   // e.g., "Full-time", "Contract"
+  description String   @db.Text
+  isActive    Boolean  @default(true)
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  applicants   Applicant[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model Applicant {
+  id        String          @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  resumeUrl String?
+  status    ApplicantStatus @default(APPLIED)
+  notes     String?         @db.Text
+
+  jobId     String
+  job       JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)

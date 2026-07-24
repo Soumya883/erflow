@@ -21,6 +21,9 @@ import {
   Settings,
   LogOut,
   MessageSquare,
+  Package,
+  TrendingUp,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -42,6 +45,7 @@ const navGroups: NavGroup[] = [
       { name: "Projects", href: "/projects", icon: FolderKanban },
       { name: "Tasks", href: "/tasks", icon: CheckSquare },
       { name: "Calendar", href: "/calendar", icon: CalendarRange },
+      { name: "Assets", href: "/assets", icon: Package },
     ]
   },
   {
@@ -50,6 +54,13 @@ const navGroups: NavGroup[] = [
       { name: "Messages", href: "/messages", icon: MessageSquare },
       { name: "Announcements", href: "/announcements", icon: Megaphone },
       { name: "Documents", href: "/documents", icon: Files },
+    ]
+  },
+  {
+    label: "HR & Performance",
+    items: [
+      { name: "Appraisals", href: "/appraisals", icon: TrendingUp },
+      { name: "Recruitment", href: "/recruitment", icon: Briefcase },
     ]
   },
   {
